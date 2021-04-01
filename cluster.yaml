@@ -2,8 +2,9 @@ apiVersion: eksctl.io/v1alpha5
 kind: ClusterConfig
 
 metadata:
-  name: app
+  name: app-demo
   region: us-east-1
+  version: "1.19"
 
 vpc:
   subnets:
@@ -14,24 +15,39 @@ vpc:
 iam:
   withOIDC: true
 
-managedNodeGroups:
-  - name: ng-spot-workers
-    spot: true
-    minSize: 1
-    maxSize: 3
-    desiredCapacity: 1
-    privateNetworking: true
-    ssh:
-      publicKeyName: scottliao
-
 nodeGroups:
-  - name: ng-1-workers
+  - name: ng-1
+    desiredCapacity: 2
     instanceType: m5.large
-    desiredCapacity: 1
     privateNetworking: true
     iam:
+      attachPolicyARNs:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+        - arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+        - arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
       withAddonPolicies:
-        imageBuilder: true
         autoScaler: true
+        imageBuilder: true
     ssh:
+      allow: true
       publicKeyName: scottliao
+
+# managedNodeGroups:
+#   - name: ng-1-workers
+#     spot: true
+#     minSize: 1
+#     maxSize: 3
+#     instanceType: m5.large
+#     desiredCapacity: 1
+#     privateNetworking: true
+#     iam:
+#       withAddonPolicies:
+#         autoScaler: true
+#     ssh:
+#       publicKeyName: scottliao
+
+# To enable all of the control plane logs, uncomment below:
+cloudWatch:
+  clusterLogging:
+    enableTypes: ["*"]
