@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: graviton2
+  name: nginx-arm64
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        service: nginx
+        app: nginx
+    spec:
+      containers:
+      - name: nginx-arm64
+        image: nginx
+        # resources:
+        #   limits:
+        #     cpu: 512m
+        #     memory: 512Mi
+      nodeSelector:
+        beta.kubernetes.io/arch: arm64
