@@ -1,4 +1,4 @@
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1beta1
 kind: Ingress
 metadata:
   namespace: game-2048
@@ -6,9 +6,7 @@ metadata:
   annotations:
     kubernetes.io/ingress.class: alb
     alb.ingress.kubernetes.io/scheme: internet-facing
-    alb.ingress.kubernetes.io/group.name: game
     alb.ingress.kubernetes.io/target-type: ip
-    alb.ingress.kubernetes.io/group.order: '1000'
 spec:
   rules:
     - http:
