@@ -1,9 +1,9 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: simple-backend
+  name: simple-app
   labels:
-    app: simple-backend
+    app: simple-app
   annotations:
     kubernetes.io/ingress.class: nginx
     nginx.ingress.kubernetes.io/rewrite-target: /$2
@@ -12,6 +12,13 @@ spec:
   - host: foo.bar.com
     http:
       paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service: 
+            name: frontend
+            port:
+              number: 80
       - path: /(.+)
         pathType: Prefix
         backend:
