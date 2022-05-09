@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: simple-backend
+spec:
+  selector:
+    matchLabels:
+      app: backend
+  replicas: 2 # tells deployment to run 2 pods matching the template
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+      - name: backend
+        image: 381354187112.dkr.ecr.us-east-1.amazonaws.com/simple-backend:latest
+        ports:
+          - containerPort: 80

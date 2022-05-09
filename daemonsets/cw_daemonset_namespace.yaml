@@ -1,10 +1,10 @@
-# create amazon-cloudwatch namespace
+# create game-2048 namespace
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: amazon-cloudwatch
+  name: game-2048
   labels:
-    name: amazon-cloudwatch
+    name: game-2048
 ---
 
 # create cwagent service account and role binding
@@ -12,12 +12,16 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: cloudwatch-agent
-  namespace: amazon-cloudwatch
-
+  namespace: game-2048
+  annotations:
+    eks.amazonaws.com/role-arn: >-
+      arn:aws:iam::381354187112:role/AmazonEKSCloudWatchAgentRole
 ---
-kind: ClusterRole
+
 apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
 metadata:
+  namespace: game-2048
   name: cloudwatch-agent-role
 rules:
   - apiGroups: [""]
@@ -40,17 +44,44 @@ rules:
     resourceNames: ["cwagent-clusterleader"]
     verbs: ["get","update"]
 
+# ---
+#
+# kind: ClusterRole
+# apiVersion: rbac.authorization.k8s.io/v1
+# metadata:
+#   name: cloudwatch-agent-role
+# rules:
+#   - apiGroups: [""]
+#     resources: ["pods", "nodes", "endpoints"]
+#     verbs: ["list", "watch"]
+#   - apiGroups: ["apps"]
+#     resources: ["replicasets"]
+#     verbs: ["list", "watch"]
+#   - apiGroups: ["batch"]
+#     resources: ["jobs"]
+#     verbs: ["list", "watch"]
+#   - apiGroups: [""]
+#     resources: ["nodes/proxy"]
+#     verbs: ["get"]
+#   - apiGroups: [""]
+#     resources: ["nodes/stats", "configmaps", "events"]
+#     verbs: ["create"]
+#   - apiGroups: [""]
+#     resources: ["configmaps"]
+#     resourceNames: ["cwagent-clusterleader"]
+#     verbs: ["get","update"]
+
 ---
-kind: ClusterRoleBinding
+kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: cloudwatch-agent-role-binding
 subjects:
   - kind: ServiceAccount
     name: cloudwatch-agent
-    namespace: amazon-cloudwatch
+    namespace: game-2048
 roleRef:
-  kind: ClusterRole
+  kind: Role
   name: cloudwatch-agent-role
   apiGroup: rbac.authorization.k8s.io
 ---
@@ -78,7 +109,7 @@ data:
 kind: ConfigMap
 metadata:
   name: cwagentconfig
-  namespace: amazon-cloudwatch
+  namespace: game-2048
 ---
 
 # deploy cwagent as daemonset
@@ -86,7 +117,7 @@ apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: cloudwatch-agent
-  namespace: amazon-cloudwatch
+  namespace: game-2048
 spec:
   selector:
     matchLabels:
@@ -98,7 +129,7 @@ spec:
     spec:
       containers:
         - name: cloudwatch-agent
-          image: amazon/cloudwatch-agent:1.247347.6b250880
+          image: amazon/cloudwatch-agent:1.247348.0b251302
           #ports:
           #  - containerPort: 8125
           #    hostPort: 8125
@@ -121,11 +152,9 @@ spec:
                 fieldRef:
                   fieldPath: spec.nodeName
             - name: K8S_NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
+              value: "game-2048"
             - name: CI_VERSION
-              value: "k8s/1.3.6"
+              value: "k8s/1.3.8"
           # Please don't change the mountPath
           volumeMounts:
             - name: cwagentconfig
@@ -184,19 +213,23 @@ data:
 kind: ConfigMap
 metadata:
   name: cluster-info
-  namespace: amazon-cloudwatch
+  namespace: game-2048
 ---
 
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: fluentd
-  namespace: amazon-cloudwatch
+  namespace: game-2048
+  annotations:
+    eks.amazonaws.com/role-arn: >-
+      arn:aws:iam::381354187112:role/AmazonEKSCloudWatchAgentRole
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
+kind: Role
 metadata:
   name: fluentd-role
+  namespace: game-2048
 rules:
   - apiGroups: [""]
     resources:
@@ -206,9 +239,10 @@ rules:
     verbs: ["get", "list", "watch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
+kind: RoleBinding
 metadata:
   name: fluentd-role-binding
+  namespace: game-2048
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -216,13 +250,13 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: fluentd
-    namespace: amazon-cloudwatch
+    namespace: game-2048
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: fluentd-config
-  namespace: amazon-cloudwatch
+  namespace: game-2048
   labels:
     k8s-app: fluentd-cloudwatch
 data:
@@ -282,6 +316,7 @@ data:
       <filter **>
         @type kubernetes_metadata
         @id filter_kube_metadata_fluentd
+        watch false
       </filter>
 
       <filter **>
@@ -302,6 +337,7 @@ data:
       <filter **>
         @type kubernetes_metadata
         @id filter_kube_metadata
+        watch false
       </filter>
 
       <filter **>
@@ -331,6 +367,7 @@ data:
       <filter **>
         @type kubernetes_metadata
         @id filter_kube_metadata_cwagent
+        watch false
       </filter>
 
       <filter **>
@@ -435,6 +472,7 @@ data:
       <filter **>
         @type kubernetes_metadata
         @id filter_kube_metadata_systemd
+        watch false
       </filter>
 
       <filter **>
@@ -505,6 +543,7 @@ data:
       <filter **>
         @type kubernetes_metadata
         @id filter_kube_metadata_host
+        watch false
       </filter>
 
       <filter **>
@@ -536,7 +575,7 @@ apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: fluentd-cloudwatch
-  namespace: amazon-cloudwatch
+  namespace: game-2048
 spec:
   selector:
     matchLabels:
@@ -580,7 +619,7 @@ spec:
                   name: cluster-info
                   key: cluster.name
             - name: CI_VERSION
-              value: "k8s/1.3.6"
+              value: "k8s/1.3.8"
           resources:
             limits:
               memory: 400Mi

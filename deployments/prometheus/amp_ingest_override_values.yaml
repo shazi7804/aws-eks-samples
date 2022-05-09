@@ -1,0 +1,21 @@
+serviceAccounts:
+  server:
+        name: "iamproxy-service-account"
+  alertmanager:
+    create: false
+  pushgateway:
+    create: false
+server:
+  remoteWrite:
+    - 
+      queue_config:
+        max_samples_per_send: 1000
+        max_shards: 200
+        capacity: 2500
+  statefulSet:
+    enabled: true
+  retention: 1h
+alertmanager:
+  enabled: false
+pushgateway:
+  enabled: false

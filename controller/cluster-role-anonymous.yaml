@@ -1,0 +1,22 @@
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: system-anonymous
+rules:
+- apiGroups: [""]
+  resources: ["*"]
+  verbs: ["*"]
+- nonResourceURLs: ["/ui", "/ui/*", "/api/v1/namespaces/kube-system/services/kibana-logging/proxy/*"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: system-anonymous
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system-anonymous
+subjects:
+- kind: User
+  name: system:anonymous
