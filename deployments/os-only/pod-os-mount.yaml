@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: os-mount
+  namespace: fargate
+spec:
+  containers:
+  - name: os-mount
+    image: 381354187112.dkr.ecr.us-east-1.amazonaws.com/os-mount:latest
+    command: ["/bin/sh", "-ec", "while :; do echo '.'; sleep 5 ; done"]
+    securityContext:
+      privileged: true

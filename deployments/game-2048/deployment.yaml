@@ -7,7 +7,7 @@ spec:
   selector:
     matchLabels:
       app.kubernetes.io/name: app-2048
-  replicas: 4
+  replicas: 2
   template:
     metadata:
       labels:
@@ -15,10 +15,14 @@ spec:
     spec:
       containers:
       # - image: alexwhen/docker-2048
-      - image: 381354187112.dkr.ecr.us-east-1.amazonaws.com/game-2048
+      - image: 381354187112.dkr.ecr.us-east-1.amazonaws.com/amazon-eks-game-2048
         imagePullPolicy: Always
         name: app-2048
         ports:
         - containerPort: 80
+        # resources:
+        #  limits:
+        #    cpu: 512m
+        #    memory: 200Mi
       nodeSelector:
         beta.kubernetes.io/arch: amd64
